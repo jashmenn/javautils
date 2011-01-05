@@ -18,13 +18,6 @@ public class AlternatingMultiqueue<K,E> {
     private final LinkedList<K> keys = new LinkedList<K>();
     private int currentKey = 0;
 
-
-    private final ReentrantLock dequeueLock = new ReentrantLock();
-    private final Condition notEmpty = dequeueLock.newCondition();
-
-    private final ReentrantLock enqueueLock = new ReentrantLock();
-    private final Condition notFull = enqueueLock.newCondition();
-
     public AlternatingMultiqueue(int capacity) {
         if (capacity <= 0) {
             throw new IllegalArgumentException();
@@ -59,63 +52,24 @@ public class AlternatingMultiqueue<K,E> {
         return x;
     }
 
-    public E dequeue() throws InterruptedException {
+    public synchronized E dequeue() throws InterruptedException, IllegalStateException {
         E x;
         int c = -1;
-        //final AtomicInteger count = this.count;
-        //final ReentrantLock dequeueLock = this.dequeueLock;
-        dequeueLock.lockInterruptibly();
-        try {
-            try {
-                while(count.get() == 0)
-                    notEmpty.await();
-            } catch (InterruptedException ie) {
-                notEmpty.signal();
-                throw ie;
-            }
-            x = extract();
-            c = count.getAndDecrement();
-            if(c > 1)
-                notEmpty.signal();
-        } finally {
-            dequeueLock.unlock();
-        }
-
-        // if the queue was full before dequeue we need to signal notFull
-        if(c == capacity) {
-            final ReentrantLock enqueueLock = this.enqueueLock;
-            enqueueLock.lock();
-            try {
-                notFull.signal();
-            } finally {
-                enqueueLock.unlock();
-            }
-        }
+        if (count.get() == 0)
+            throw new IllegalStateException();
+        x = extract();
+        c = count.getAndDecrement();
 
         return x;
     }
 
-    public void enqueue(K key, E e) throws InterruptedException {
+    public synchronized void enqueue(K key, E e) throws InterruptedException {
         if(e == null) throw new NullPointerException();
 
-        //final ReentrantLock enqueueLock = this.enqueueLock;
-        //final AtomicInteger count = this.count;
+        if(count.get() == capacity)
+            throw new IllegalStateException();
 
-        enqueueLock.lockInterruptibly();
-        try {
-            try {
-                while(count.get() == capacity)
-                    notFull.await();
-            } catch (InterruptedException ie) {
-                notFull.signal();
-                throw ie;
-            }
-            insert(key, e);
-            int c = count.getAndIncrement();
-            if (c + 1 < capacity)
-                notFull.signal();
-        } finally {
-            enqueueLock.unlock();
-        }
+        insert(key, e);
+        int c = count.getAndIncrement();
     }
 }

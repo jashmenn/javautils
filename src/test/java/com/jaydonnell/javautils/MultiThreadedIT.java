@@ -8,6 +8,7 @@ import org.junit.Assert;
 public class MultiThreadedIT {
     @Test
     public void runTests() {
+
         Assert.assertTrue(true);
     }
 }
