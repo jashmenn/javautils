@@ -62,8 +62,8 @@ public class AlternatingMultiqueue<K,E> {
     public E dequeue() throws InterruptedException {
         E x;
         int c = -1;
-        final AtomicInteger count = this.count;
-        final ReentrantLock dequeueLock = this.dequeueLock;
+        //final AtomicInteger count = this.count;
+        //final ReentrantLock dequeueLock = this.dequeueLock;
         dequeueLock.lockInterruptibly();
         try {
             try {
@@ -98,8 +98,8 @@ public class AlternatingMultiqueue<K,E> {
     public void enqueue(K key, E e) throws InterruptedException {
         if(e == null) throw new NullPointerException();
 
-        final ReentrantLock enqueueLock = this.enqueueLock;
-        final AtomicInteger count = this.count;
+        //final ReentrantLock enqueueLock = this.enqueueLock;
+        //final AtomicInteger count = this.count;
 
         enqueueLock.lockInterruptibly();
         try {
