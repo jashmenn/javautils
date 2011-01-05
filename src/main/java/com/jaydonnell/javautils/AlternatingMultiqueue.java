@@ -13,6 +13,7 @@ public class AlternatingMultiqueue<K,E> {
 
     private final int capacity;
     private final AtomicInteger count = new AtomicInteger(0);
+    // TODO is LinkedListMultimap the right choice?
     private final LinkedListMultimap<K, E> multiMap = LinkedListMultimap.create();
     private final LinkedList<K> keys = new LinkedList<K>();
     private int currentKey = 0;
@@ -117,8 +118,4 @@ public class AlternatingMultiqueue<K,E> {
             enqueueLock.unlock();
         }
     }
-
-    //public E dequeue() {
-    //    return E;
-    //}
 }
