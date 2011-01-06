@@ -39,9 +39,6 @@ define "javautils" do
 
       dequeue_pool.awaitTermination(100, Java::JavaUtilConcurrent::TimeUnit.valueOf("SECONDS"))
       
-      puts "enqueued size: " + enqueued.size().to_s
-      puts "dequeued size: " + dequeued.size().to_s
-
       enqueued.each do |v|
         raise "value not in dequeued" unless dequeued.remove(v)
       end
