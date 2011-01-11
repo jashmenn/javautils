@@ -72,4 +72,40 @@ public class AlternatingMultiqueue<K,E> {
         insert(key, e);
         int c = count.getAndIncrement();
     }
+
+    /* 
+     * Retrieves and removes the head of this queue, or null if this queue is empty.
+     */
+    public synchronized E poll() throws InterruptedException {
+        try {
+            return this.dequeue();
+        } catch (IllegalStateException e) {
+            return null;
+        }
+    }
+
+
+    /* 
+     * Retrieves and removes the head of this queue, waiting if no
+     * elements are present on this queue.
+     *
+     * A hack. It sleeps in a loop rather than using proper locking
+     * conditions and signals.
+     */
+    public synchronized E take() throws InterruptedException {
+        boolean success = false;
+        E result = null;
+        while(!success) {
+          try {
+            result = this.dequeue();
+            success = true;
+          } catch (IllegalStateException e) {
+              Thread.sleep(100);
+          }
+        }
+        return result;
+    }
+
+
+
 }
