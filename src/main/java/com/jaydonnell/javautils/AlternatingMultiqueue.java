@@ -13,10 +13,17 @@ public class AlternatingMultiqueue<K,E> {
 
     private final int capacity;
     private final AtomicInteger count = new AtomicInteger(0);
+
     // TODO is LinkedListMultimap the right choice?
     private final LinkedListMultimap<K, E> multiMap = LinkedListMultimap.create();
     private final LinkedList<K> keys = new LinkedList<K>();
     private int currentKey = 0;
+
+    /** Lock held by take, poll, etc */
+    private final ReentrantLock takeLock = new ReentrantLock();
+
+    /** Wait queue for waiting takes */
+    private final Condition notEmpty = takeLock.newCondition();
 
     public AlternatingMultiqueue(int capacity) {
         if (capacity <= 0) {
@@ -64,6 +71,7 @@ public class AlternatingMultiqueue<K,E> {
     }
 
     public synchronized void enqueue(K key, E e) throws InterruptedException {
+            // System.out.println("enqueue");
         if(e == null) throw new NullPointerException();
 
         if(count.get() == capacity)
@@ -71,6 +79,9 @@ public class AlternatingMultiqueue<K,E> {
 
         insert(key, e);
         int c = count.getAndIncrement();
+        // System.out.println(c);
+        if (c == 0)
+            signalNotEmpty();
     }
 
     /* 
@@ -84,27 +95,45 @@ public class AlternatingMultiqueue<K,E> {
         }
     }
 
-
     /* 
      * Retrieves and removes the head of this queue, waiting if no
      * elements are present on this queue.
      *
-     * A hack. It sleeps in a loop rather than using proper locking
-     * conditions and signals.
      */
-    public synchronized E take() throws InterruptedException {
-        boolean success = false;
-        E result = null;
-        while(!success) {
-          try {
-            result = this.dequeue();
-            success = true;
-          } catch (IllegalStateException e) {
-              Thread.sleep(100);
-          }
+    public E take() throws InterruptedException {
+        E x;
+        int c = -1;
+        final AtomicInteger count = this.count;
+        final ReentrantLock takeLock = this.takeLock;
+        takeLock.lockInterruptibly();
+        try {
+            while (count.get() == 0) {
+                notEmpty.await();
+            }
+            x = dequeue();   // todo
+            c = count.get(); // dequeue already decrements
+            if (c > 1)
+                notEmpty.signal();
+        } finally {
+            takeLock.unlock();
         }
-        return result;
+        return x;
     }
+
+    /**
+     * Signals a waiting take. Called only from put/offer (which do not
+     * otherwise ordinarily lock takeLock.)
+     */
+    private void signalNotEmpty() {
+        final ReentrantLock takeLock = this.takeLock;
+        takeLock.lock();
+        try {
+            notEmpty.signal();
+        } finally {
+            takeLock.unlock();
+        }
+    }
+
 
 
 

@@ -3,7 +3,7 @@ repositories.remote << 'http://www.ibiblio.org/maven2'
 GUAVA = 'com.google.guava:guava:jar:r07'
 
 define "javautils" do
-    project.version= "0.1.0"
+    project.version= "0.1.1"
     compile.with GUAVA
     package :jar
 

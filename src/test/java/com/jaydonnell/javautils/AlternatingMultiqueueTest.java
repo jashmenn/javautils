@@ -65,4 +65,5 @@ public class AlternatingMultiqueueTest {
         o = queue.take();
         Assert.assertTrue("second".equals(o));
     }
+
 }
