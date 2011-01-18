@@ -1,0 +1,1 @@
+mvn deploy:deploy-file -e -X -DgroupId=com.atti.wdm -DartifactId=javautils -DpomFile=pom.xml -Dfile=target/javautils-0.1.1.jar -Dpackaging=jar -DrepositoryId=yp_local -Durl=http://svn2.wc1.yellowpages.com:9999/nexus/content/repositories/releases -Dversion=0.1.1
