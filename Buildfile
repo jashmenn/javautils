@@ -3,7 +3,7 @@ repositories.remote << 'http://www.ibiblio.org/maven2'
 GUAVA = 'com.google.guava:guava:jar:r07'
 
 define "javautils" do
-    project.version= "0.1.1"
+    project.version= "0.2.0"
     compile.with GUAVA
     package :jar
 
@@ -16,7 +16,7 @@ define "javautils" do
     end
 
     task :stresstest => [:package] do
-      require 'target/javautils-0.1.0.jar'
+      require 'target/javautils-0.2.0.jar'
 
       specs = (project.compile.dependencies + project.test.compile.dependencies).flatten
       cp = Buildr.artifacts(specs).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
@@ -40,12 +40,16 @@ define "javautils" do
       dequeue_pool.awaitTermination(100, Java::JavaUtilConcurrent::TimeUnit.valueOf("SECONDS"))
       
       enqueued.each do |v|
-        raise "value not in dequeued" unless dequeued.remove(v)
+        #print v + " "
+        raise "value #{v} not in dequeued" unless dequeued.remove(v)
       end
+      puts
 
       raise "dequeued count does not matche enqueued count" unless dequeued.isEmpty
     end
 end
+
+
 
 class Enqueuer
   include java.lang.Runnable
@@ -58,7 +62,7 @@ class Enqueuer
   def run
     1000.times do
       v = rand(10000000).to_s
-      @queue.enqueue(rand(10).to_s, v)
+      @queue.put(rand(10).to_s, v)
       @enqueued.offer(v)
     end
   end
@@ -74,7 +78,7 @@ class Dequeuer
 
   def run
     10000.times do
-      v = @queue.dequeue()
+      v = @queue.poll()
       @dequeued.offer(v)
     end
   end

@@ -12,18 +12,18 @@ public class AlternatingMultiqueueTest {
     public void testAlternatingDequeque() throws InterruptedException {
         String o = null;
         AlternatingMultiqueue<String, String> queue = new AlternatingMultiqueue<String, String>(10);
-        queue.enqueue("k1", "first");
-        queue.enqueue("k1", "fourth");
-        queue.enqueue("k2", "second");
-        queue.enqueue("k3", "third");
+        queue.offer("k1", "first");
+        queue.offer("k1", "fourth");
+        queue.offer("k2", "second");
+        queue.offer("k3", "third");
 
-        o = queue.dequeue();
+        o = queue.poll();
         Assert.assertTrue("first".equals(o));
-        o = queue.dequeue();
+        o = queue.poll();
         Assert.assertTrue("second".equals(o));
-        o = queue.dequeue();
+        o = queue.poll();
         Assert.assertTrue("third".equals(o));
-        o = queue.dequeue();
+        o = queue.poll();
         Assert.assertTrue("fourth".equals(o));
     }
 
@@ -31,7 +31,7 @@ public class AlternatingMultiqueueTest {
     public void testAlternatingPoll() throws InterruptedException {
         String o = null;
         AlternatingMultiqueue<String, String> queue = new AlternatingMultiqueue<String, String>(10);
-        queue.enqueue("k1", "first");
+        queue.offer("k1", "first");
 
         o = queue.poll();
         Assert.assertTrue("first".equals(o));
@@ -48,14 +48,14 @@ public class AlternatingMultiqueueTest {
             public void run() {
                 try {
                     Thread.sleep(500);
-                    queue.enqueue("k2", "second");
+                    queue.offer("k2", "second");
                 } catch (InterruptedException e) {
                     // do nothing
                 }
             }
         }
 
-        queue.enqueue("k1", "first");
+        queue.offer("k1", "first");
         o = queue.take();
         Assert.assertTrue("first".equals(o));
 
