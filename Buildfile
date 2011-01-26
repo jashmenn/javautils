@@ -3,7 +3,7 @@ repositories.remote << 'http://www.ibiblio.org/maven2'
 GUAVA = 'com.google.guava:guava:jar:r07'
 
 define "javautils" do
-    project.version= "0.2.0"
+    project.version= "0.2.1"
     compile.with GUAVA
     package :jar
 
@@ -16,7 +16,7 @@ define "javautils" do
     end
 
     task :stresstest => [:package] do
-      require 'target/javautils-0.2.0.jar'
+      require 'target/javautils-0.2.1.jar'
 
       specs = (project.compile.dependencies + project.test.compile.dependencies).flatten
       cp = Buildr.artifacts(specs).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
