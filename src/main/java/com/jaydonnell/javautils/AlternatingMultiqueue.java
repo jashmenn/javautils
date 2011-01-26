@@ -32,6 +32,8 @@ public class AlternatingMultiqueue<K,E> {
     /** Wait queue for waiting puts */
     private final Condition notFull = putLock.newCondition();
 
+    private final ReentrantLock queueChangeLock = new ReentrantLock();
+
     /**
      * Signals a waiting take. Called only from put/offer (which do not
      * otherwise ordinarily lock takeLock.)
@@ -92,8 +94,9 @@ public class AlternatingMultiqueue<K,E> {
     /**
      * @param x the item
      */
+    // @GuardedBy("putLock")
+    @GuardedBy("queueChangeLock")
     private void enqueue(K key, E e) {
-        // assert putLock.isHeldByCurrentThread();
         multiMap.put(key, e);
         if(!keys.contains(key))
             keys.add(key);
@@ -103,8 +106,9 @@ public class AlternatingMultiqueue<K,E> {
      * Removes a node from head of queue.
      * @return the node
      */
+    // @GuardedBy("takeLock")
+    @GuardedBy("queueChangeLock")
     private E dequeue() {
-        // assert takeLock.isHeldByCurrentThread();
         K key = keys.get(currentKey.get());
         E x = multiMap.get(key).remove(0);
 
@@ -204,10 +208,18 @@ public class AlternatingMultiqueue<K,E> {
             while (count.get() == capacity) { 
                     notFull.await();
             }
-            enqueue(key, e);
-            c = count.getAndIncrement();
-            if (c + 1 < capacity)
-                notFull.signal();
+
+            final ReentrantLock queueChangeLock = this.queueChangeLock;
+            queueChangeLock.lockInterruptibly();
+            try {
+                enqueue(key, e);
+                c = count.getAndIncrement();
+                if (c + 1 < capacity)
+                    notFull.signal();
+            } finally {
+                queueChangeLock.unlock();
+            }
+
         } finally {
             putLock.unlock();
         }
@@ -239,10 +251,18 @@ public class AlternatingMultiqueue<K,E> {
                     return false;
                 nanos = notFull.awaitNanos(nanos);
             }
-            enqueue(k, e);
-            c = count.getAndIncrement();
-           if (c + 1 < capacity)
-               notFull.signal();
+
+            final ReentrantLock queueChangeLock = this.queueChangeLock;
+            queueChangeLock.lockInterruptibly();
+            try {
+                enqueue(key, e);
+                c = count.getAndIncrement();
+                if (c + 1 < capacity)
+                    notFull.signal();
+            } finally {
+                queueChangeLock.unlock();
+            }
+
         } finally {
             putLock.unlock();
         }
@@ -273,10 +293,18 @@ public class AlternatingMultiqueue<K,E> {
         putLock.lock();
         try {
             if (count.get() < capacity) {
-                enqueue(k, e);
-                c = count.getAndIncrement();
-                if (c + 1 < capacity)
-                    notFull.signal();
+
+                final ReentrantLock queueChangeLock = this.queueChangeLock;
+                queueChangeLock.lockInterruptibly();
+                try {
+                    enqueue(key, e);
+                    c = count.getAndIncrement();
+                    if (c + 1 < capacity)
+                        notFull.signal();
+                } finally {
+                    queueChangeLock.unlock();
+                }
+
             }
         } finally {
             putLock.unlock();
@@ -298,12 +326,20 @@ public class AlternatingMultiqueue<K,E> {
         takeLock.lockInterruptibly();
         try {
             while (count.get() == 0) {
-                notEmpty.await();
+               notEmpty.await();
             }
-            x = dequeue();
-            c = count.getAndDecrement();
-            if (c > 1)
-                notEmpty.signal();
+
+            final ReentrantLock queueChangeLock = this.queueChangeLock;
+            queueChangeLock.lockInterruptibly();
+            try {
+                x = dequeue();
+                c = count.getAndDecrement();
+                if (c > 1)
+                  notEmpty.signal();
+            } finally {
+                queueChangeLock.unlock();
+            }
+
         } finally {
             takeLock.unlock();
         }
@@ -331,10 +367,19 @@ public class AlternatingMultiqueue<K,E> {
                     return null;
                   nanos = notEmpty.awaitNanos(nanos);
                 }
-                x = dequeue();
-                c = count.getAndDecrement();
-                if (c > 1)
-                    notEmpty.signal();
+
+                final ReentrantLock queueChangeLock = this.queueChangeLock;
+                queueChangeLock.lockInterruptibly();
+                try {
+                    x = dequeue();
+                    c = count.getAndDecrement();
+                    if (c > 1)
+                        notEmpty.signal();
+                } finally {
+                    queueChangeLock.unlock();
+                }
+
+
         } finally {
             takeLock.unlock();
         }
@@ -356,10 +401,18 @@ public class AlternatingMultiqueue<K,E> {
         takeLock.lock();
         try {
             if (count.get() > 0) {
-                x = dequeue();
-                c = count.getAndDecrement();
-                if (c > 1)
-                    notEmpty.signal();
+
+                final ReentrantLock queueChangeLock = this.queueChangeLock;
+                queueChangeLock.lockInterruptibly();
+                try {
+                    x = dequeue();
+                    c = count.getAndDecrement();
+                    if (c > 1)
+                        notEmpty.signal();
+                } finally {
+                    queueChangeLock.unlock();
+                }
+
             }
         } finally {
             takeLock.unlock();
