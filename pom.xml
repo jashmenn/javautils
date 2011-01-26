@@ -4,7 +4,7 @@
     <groupId>com.atti.wdm</groupId>
     <artifactId>javautils</artifactId>
     <packaging>jar</packaging>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
     <name>javautils</name>
     <url>http://maven.apache.org</url>
     <dependencies>
@@ -18,7 +18,12 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>r07</version>
-        </dependency>
+          </dependency>
+          <dependency>
+            <groupId>net.jcip</groupId>
+            <artifactId>jcip-annotations</artifactId>
+            <version>1.0</version>
+          </dependency>
     </dependencies>
     <build>
         <plugins>
