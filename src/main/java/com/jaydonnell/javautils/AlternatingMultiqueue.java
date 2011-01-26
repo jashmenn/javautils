@@ -255,7 +255,7 @@ public class AlternatingMultiqueue<K,E> {
             final ReentrantLock queueChangeLock = this.queueChangeLock;
             queueChangeLock.lockInterruptibly();
             try {
-                enqueue(key, e);
+                enqueue(k, e);
                 c = count.getAndIncrement();
                 if (c + 1 < capacity)
                     notFull.signal();
@@ -297,7 +297,7 @@ public class AlternatingMultiqueue<K,E> {
                 final ReentrantLock queueChangeLock = this.queueChangeLock;
                 queueChangeLock.lockInterruptibly();
                 try {
-                    enqueue(key, e);
+                    enqueue(k, e);
                     c = count.getAndIncrement();
                     if (c + 1 < capacity)
                         notFull.signal();
@@ -306,6 +306,8 @@ public class AlternatingMultiqueue<K,E> {
                 }
 
             }
+        } catch (InterruptedException ex) {
+            return c >= 0; // hmm not sure?
         } finally {
             putLock.unlock();
         }
@@ -414,6 +416,8 @@ public class AlternatingMultiqueue<K,E> {
                 }
 
             }
+        } catch (InterruptedException e) {
+            return x;
         } finally {
             takeLock.unlock();
         }
