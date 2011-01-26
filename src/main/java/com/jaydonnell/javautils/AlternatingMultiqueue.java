@@ -5,6 +5,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.*;
 import java.util.*;
+import net.jcip.annotations.*;
 
 /** 
  * @author ddonnell
@@ -58,20 +59,20 @@ public class AlternatingMultiqueue<K,E> {
         }
     }
 
-    private void incrementCurrentKey() {
+    private synchronized void incrementCurrentKey() {
         for(;;) {
           int current = currentKey.get();
           int mod = keys.size() > 0 ? keys.size() : 1; 
           int next = (current + 1) % mod;
           if(currentKey.compareAndSet(current, next))
               return;
-        }
+       }
         // int count = currentKey.incrementAndGet();
         // if (count >= keys.size())
         //    currentKey = 0;
     }
 
-    private void decrementCurrentKey() { // hmmm
+    private synchronized void decrementCurrentKey() { // hmmm
         for(;;) {
             int current = currentKey.get();
             int next = (current - 1); 
@@ -157,7 +158,7 @@ public class AlternatingMultiqueue<K,E> {
      * @return the number of elements in this queue
      */
     public int size() {
-        return multiMap.size();
+        return count.get();
     }
 
     /**
@@ -172,7 +173,7 @@ public class AlternatingMultiqueue<K,E> {
      * insert or remove an element.
      */
     public int remainingCapacity() {
-        return capacity - multiMap.size();
+        return capacity - count.get();
     }
 
     /**
