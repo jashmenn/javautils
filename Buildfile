@@ -1,10 +1,12 @@
 repositories.remote << 'http://www.ibiblio.org/maven2'
 
 GUAVA = 'com.google.guava:guava:jar:r07'
+JCIP = 'net.jcip:jcip-annotations:jar:1.0'
 
 define "javautils" do
     project.version= "0.2.2"
     compile.with GUAVA
+    compile.with JCIP
     package :jar
 
     task :threadingtest => [:compile, :test] do
