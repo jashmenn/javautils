@@ -426,4 +426,35 @@ public class AlternatingMultiqueue<K,E> {
         return x;
     }
 
+    /**
+     */
+    public int drainTo(Collection<? super E> c) {
+        if (c == null)
+            throw new NullPointerException();
+        if (c == this)
+            throw new IllegalArgumentException();
+        boolean signalNotFull = false;
+        final ReentrantLock takeLock = this.takeLock;
+        takeLock.lock();
+        try {
+            int i = 0;
+            try {
+                for(E value : multiMap.values()) {
+                    c.add(value);
+                    ++i;
+                }
+                multiMap.clear();
+                count.getAndSet(0);
+                return i;
+            } finally {
+                // Restore invariants even if c.add() threw
+                signalNotFull = (count.get() < capacity);
+            }
+        } finally {
+            takeLock.unlock();
+            if (signalNotFull)
+                 signalNotFull();
+        }
+    }
+
 }
