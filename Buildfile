@@ -4,7 +4,7 @@ GUAVA = 'com.google.guava:guava:jar:r07'
 JCIP = 'net.jcip:jcip-annotations:jar:1.0'
 
 define "javautils" do
-    project.version= "0.2.2"
+    project.version= "0.2.3"
     compile.with GUAVA
     compile.with JCIP
     package :jar
@@ -18,7 +18,7 @@ define "javautils" do
     end
 
     task :stresstest => [:package] do
-      require 'target/javautils-0.2.1.jar'
+      require 'target/javautils-0.2.3.jar'
 
       specs = (project.compile.dependencies + project.test.compile.dependencies).flatten
       cp = Buildr.artifacts(specs).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
@@ -45,7 +45,7 @@ define "javautils" do
         #print v + " "
         raise "value #{v} not in dequeued" unless dequeued.remove(v)
       end
-      puts
+      puts "Stress test complete."
 
       raise "dequeued count does not matche enqueued count" unless dequeued.isEmpty
     end
